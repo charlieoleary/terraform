@@ -453,8 +453,9 @@ func (c *Context) Input(mode InputMode) error {
 // Apply applies the changes represented by this context and returns
 // the resulting state.
 //
-// In addition to returning the resulting state, this context is updated
-// with the latest state.
+// Even in the case an error is returned, the state will be returned and will
+// potentially be partially updated.  In addition to returning the resulting
+// state, this context is updated with the latest state.
 func (c *Context) Apply() (*State, error) {
 	defer c.acquireRun("apply")()
 
@@ -464,7 +465,7 @@ func (c *Context) Apply() (*State, error) {
 	// Build the graph.
 	graph, err := c.Graph(GraphTypeApply, nil)
 	if err != nil {
-		return nil, err
+		return c.state, err
 	}
 
 	// Determine the operation
@@ -591,12 +592,12 @@ func (c *Context) Refresh() (*State, error) {
 	// Build the graph.
 	graph, err := c.Graph(GraphTypeRefresh, nil)
 	if err != nil {
-		return nil, err
+		return c.state, err
 	}
 
 	// Do the walk
 	if _, err := c.walk(graph, graph, walkRefresh); err != nil {
-		return nil, err
+		return c.state, err
 	}
 
 	// Clean out any unused things
